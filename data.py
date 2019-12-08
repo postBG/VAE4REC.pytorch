@@ -184,3 +184,19 @@ if __name__ == '__main__':
     test_data_te.to_csv(os.path.join(pro_dir, 'test_te.csv'), index=False)
 
     print("Done!")
+
+
+def create_datasets(parsed_args):
+    loader = DataLoader(parsed_args.data)
+    n_items = loader.load_n_items()
+    train_data = loader.load_data('train')
+    vad_data_tr, vad_data_te = loader.load_data('validation')
+    test_data_tr, test_data_te = loader.load_data('test')
+    datasets = {
+        'train_data': train_data,
+        'val_data_tr': vad_data_tr,
+        'val_data_te': vad_data_te,
+        'test_data_tr': test_data_tr,
+        'test_data_te': test_data_te
+    }
+    return datasets, n_items
