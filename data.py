@@ -4,7 +4,7 @@ import pandas as pd
 from scipy import sparse
 
 
-class DataLoader():
+class DataLoader(object):
     '''
     Load Movielens-20m dataset
     '''
@@ -121,8 +121,9 @@ if __name__ == '__main__':
 
     print("Load and Preprocess Movielens-20m dataset")
     # Load Data
-    DATA_DIR = 'ml-20m/'
-    raw_data = pd.read_csv(os.path.join(DATA_DIR, 'ratings.csv'), header=0)
+    DATA_DIR = '/data/sm/ml-1m/'
+    raw_data = pd.read_csv(os.path.join(DATA_DIR, 'ratings.dat'), sep='::', header=None)
+    raw_data.columns = ['userId', 'movieId', 'rating', 'timestamp']
     raw_data = raw_data[raw_data['rating'] > 3.5]
 
     # Filter Data
@@ -135,7 +136,7 @@ if __name__ == '__main__':
     unique_uid = unique_uid[idx_perm]
 
     n_users = unique_uid.size
-    n_heldout_users = 10000
+    n_heldout_users = 10000 // 20
 
     # Split Train/Validation/Test User Indices
     tr_users = unique_uid[:(n_users - n_heldout_users * 2)]
