@@ -11,7 +11,7 @@ import metric
 import models
 
 parser = argparse.ArgumentParser(description='PyTorch Variational Autoencoders for Collaborative Filtering')
-parser.add_argument('--data', type=str, default='ml-20m',
+parser.add_argument('--data', type=str, default='/data/sm/ml-1m',
                     help='Movielens-20m dataset location')
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='initial learning rate')
