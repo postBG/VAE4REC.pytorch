@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 import torch
+import wandb
 
 import metric
 from options import args
@@ -49,6 +50,12 @@ class Trainer(object):
             self.writer.add_scalar('data/n100', n100, n_iter)
             self.writer.add_scalar('data/r20', r20, n_iter)
             self.writer.add_scalar('data/r50', r50, n_iter)
+            wandb.log({
+                'val/loss': val_loss,
+                'val/n100': n100,
+                'val/r20': r20,
+                'val/r50': r50
+            }, n_iter)
 
             # Save the model if the n100 is the best we've seen so far.
             if n100 > best_n100:
@@ -97,6 +104,9 @@ class Trainer(object):
                 # Log loss to tensorboard
                 n_iter = (epoch - 1) * len(range(0, train_data_size, self.batch_size)) + batch_idx
                 self.writer.add_scalars('data/loss', {'train': train_loss / self.logging_interval}, n_iter)
+                wandb.log({
+                    'train/loss': train_loss / self.logging_interval
+                }, n_iter)
 
         return total_iters
 

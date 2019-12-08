@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+import wandb as wandb
 from tensorboardX import SummaryWriter
 
 import losses
@@ -14,6 +15,7 @@ def main(parsed_args):
     if torch.cuda.is_available():
         if not args.cuda:
             print("WARNING: You have a CUDA device, so you should probably run with --cuda")
+    wandb.init(config=parsed_args, name=parsed_args.exp, project="vae4rec")
 
     device = torch.device("cuda" if args.cuda else "cpu")
     datasets, n_items = create_datasets(parsed_args)
