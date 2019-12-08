@@ -4,6 +4,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def get_model_cls(args):
+    if args.model == 'DAE':
+        return MultiDAE
+    elif args.model == 'VAE':
+        return MultiVAE
+    else:
+        raise ValueError
+
+
 class MultiDAE(nn.Module):
     """
     Container module for Multi-DAE.

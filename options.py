@@ -14,4 +14,5 @@ parser.add_argument('--cuda', action='store_true', default=True, help='use CUDA'
 parser.add_argument('--log-interval', type=int, default=100, metavar='N', help='report interval')
 parser.add_argument('--save', type=str, default='model.pt', help='path to save the final model')
 parser.add_argument('--exp', type=str, default='VAE', help='path to save the final model')
+parser.add_argument('--model', type=str, default='VAE', choices=['VAE', 'DAE'], help='model')
 args = parser.parse_args()
