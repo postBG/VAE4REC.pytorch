@@ -1,6 +1,7 @@
 import bottleneck as bn
 import numpy as np
 
+
 def NDCG_binary_at_k_batch(X_pred, heldout_batch, k=100):
     '''
     Normalized Discounted Cumulative Gain@k for binary relevance

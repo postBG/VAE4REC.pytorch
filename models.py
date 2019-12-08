@@ -1,7 +1,8 @@
+import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
-import numpy as np
+
 
 class MultiDAE(nn.Module):
     """
@@ -24,11 +25,11 @@ class MultiDAE(nn.Module):
 
         self.dims = self.q_dims + self.p_dims[1:]
         self.layers = nn.ModuleList([nn.Linear(d_in, d_out) for
-            d_in, d_out in zip(self.dims[:-1], self.dims[1:])])
+                                     d_in, d_out in zip(self.dims[:-1], self.dims[1:])])
         self.drop = nn.Dropout(dropout)
-        
+
         self.init_weights()
-    
+
     def forward(self, input):
         h = F.normalize(input)
         h = self.drop(h)
@@ -45,7 +46,7 @@ class MultiDAE(nn.Module):
             size = layer.weight.size()
             fan_out = size[0]
             fan_in = size[1]
-            std = np.sqrt(2.0/(fan_in + fan_out))
+            std = np.sqrt(2.0 / (fan_in + fan_out))
             layer.weight.data.normal_(0.0, std)
 
             # Normal Initialization for Biases
@@ -74,22 +75,22 @@ class MultiVAE(nn.Module):
         # Last dimension of q- network is for mean and variance
         temp_q_dims = self.q_dims[:-1] + [self.q_dims[-1] * 2]
         self.q_layers = nn.ModuleList([nn.Linear(d_in, d_out) for
-            d_in, d_out in zip(temp_q_dims[:-1], temp_q_dims[1:])])
+                                       d_in, d_out in zip(temp_q_dims[:-1], temp_q_dims[1:])])
         self.p_layers = nn.ModuleList([nn.Linear(d_in, d_out) for
-            d_in, d_out in zip(self.p_dims[:-1], self.p_dims[1:])])
-        
+                                       d_in, d_out in zip(self.p_dims[:-1], self.p_dims[1:])])
+
         self.drop = nn.Dropout(dropout)
         self.init_weights()
-    
+
     def forward(self, input):
         mu, logvar = self.encode(input)
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
-    
+
     def encode(self, input):
         h = F.normalize(input)
         h = self.drop(h)
-        
+
         for i, layer in enumerate(self.q_layers):
             h = layer(h)
             if i != len(self.q_layers) - 1:
@@ -106,7 +107,7 @@ class MultiVAE(nn.Module):
             return eps.mul(std).add_(mu)
         else:
             return mu
-    
+
     def decode(self, z):
         h = z
         for i, layer in enumerate(self.p_layers):
@@ -121,22 +122,23 @@ class MultiVAE(nn.Module):
             size = layer.weight.size()
             fan_out = size[0]
             fan_in = size[1]
-            std = np.sqrt(2.0/(fan_in + fan_out))
+            std = np.sqrt(2.0 / (fan_in + fan_out))
             layer.weight.data.normal_(0.0, std)
 
             # Normal Initialization for Biases
             layer.bias.data.normal_(0.0, 0.001)
-        
+
         for layer in self.p_layers:
             # Xavier Initialization for weights
             size = layer.weight.size()
             fan_out = size[0]
             fan_in = size[1]
-            std = np.sqrt(2.0/(fan_in + fan_out))
+            std = np.sqrt(2.0 / (fan_in + fan_out))
             layer.weight.data.normal_(0.0, std)
 
             # Normal Initialization for Biases
             layer.bias.data.normal_(0.0, 0.001)
+
 
 def loss_function(recon_x, x, mu, logvar, anneal=1.0):
     # BCE = F.binary_cross_entropy(recon_x, x)

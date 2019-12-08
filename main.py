@@ -1,15 +1,14 @@
 import argparse
 import time
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import numpy as np
 
+import numpy as np
+import torch
+import torch.optim as optim
 from tensorboardX import SummaryWriter
-from scipy import sparse
-import models
+
 import data
 import metric
+import models
 
 parser = argparse.ArgumentParser(description='PyTorch Variational Autoencoders for Collaborative Filtering')
 parser.add_argument('--data', type=str, default='ml-20m',
@@ -76,6 +75,7 @@ criterion = models.loss_function
 
 writer = SummaryWriter()
 
+
 def sparse2torch_sparse(data):
     """
     Convert scipy sparse matrix to torch sparse tensor with L2 Normalization
@@ -87,10 +87,11 @@ def sparse2torch_sparse(data):
     coo_data = data.tocoo()
     indices = torch.LongTensor([coo_data.row, coo_data.col])
     row_norms_inv = 1 / np.sqrt(data.sum(1))
-    row2val = {i : row_norms_inv[i].item() for i in range(samples)}
+    row2val = {i: row_norms_inv[i].item() for i in range(samples)}
     values = np.array([row2val[r] for r in coo_data.row])
     t = torch.sparse.FloatTensor(indices, torch.from_numpy(values).float(), [samples, features])
     return t
+
 
 def naive_sparse2tensor(data):
     return torch.FloatTensor(data.toarray())
@@ -104,21 +105,21 @@ def train():
     global update_count
 
     np.random.shuffle(idxlist)
-    
+
     for batch_idx, start_idx in enumerate(range(0, N, args.batch_size)):
         end_idx = min(start_idx + args.batch_size, N)
         data = train_data[idxlist[start_idx:end_idx]]
         data = naive_sparse2tensor(data).to(device)
 
         if args.total_anneal_steps > 0:
-            anneal = min(args.anneal_cap, 
-                            1. * update_count / args.total_anneal_steps)
+            anneal = min(args.anneal_cap,
+                         1. * update_count / args.total_anneal_steps)
         else:
             anneal = args.anneal_cap
 
         optimizer.zero_grad()
         recon_batch, mu, logvar = model(data)
-        
+
         loss = criterion(recon_batch, data, mu, logvar, anneal)
         loss.backward()
         train_loss += loss.item()
@@ -129,11 +130,11 @@ def train():
         if batch_idx % args.log_interval == 0 and batch_idx > 0:
             elapsed = time.time() - start_time
             print('| epoch {:3d} | {:4d}/{:4d} batches | ms/batch {:4.2f} | '
-                    'loss {:4.2f}'.format(
-                        epoch, batch_idx, len(range(0, N, args.batch_size)),
-                        elapsed * 1000 / args.log_interval,
-                        train_loss / args.log_interval))
-            
+                  'loss {:4.2f}'.format(
+                epoch, batch_idx, len(range(0, N, args.batch_size)),
+                elapsed * 1000 / args.log_interval,
+                train_loss / args.log_interval))
+
             # Log loss to tensorboard
             n_iter = (epoch - 1) * len(range(0, N, args.batch_size)) + batch_idx
             writer.add_scalars('data/loss', {'train': train_loss / args.log_interval}, n_iter)
@@ -152,7 +153,7 @@ def evaluate(data_tr, data_te):
     n100_list = []
     r20_list = []
     r50_list = []
-    
+
     with torch.no_grad():
         for start_idx in range(0, e_N, args.batch_size):
             end_idx = min(start_idx + args.batch_size, N)
@@ -162,8 +163,8 @@ def evaluate(data_tr, data_te):
             data_tensor = naive_sparse2tensor(data).to(device)
 
             if args.total_anneal_steps > 0:
-                anneal = min(args.anneal_cap, 
-                               1. * update_count / args.total_anneal_steps)
+                anneal = min(args.anneal_cap,
+                             1. * update_count / args.total_anneal_steps)
             else:
                 anneal = args.anneal_cap
 
@@ -183,7 +184,7 @@ def evaluate(data_tr, data_te):
             n100_list.append(n100)
             r20_list.append(r20)
             r50_list.append(r50)
- 
+
     total_loss /= len(range(0, e_N, args.batch_size))
     n100_list = np.concatenate(n100_list)
     r20_list = np.concatenate(r20_list)
@@ -203,9 +204,9 @@ try:
         val_loss, n100, r20, r50 = evaluate(vad_data_tr, vad_data_te)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:4.2f}s | valid loss {:4.2f} | '
-                'n100 {:5.3f} | r20 {:5.3f} | r50 {:5.3f}'.format(
-                    epoch, time.time() - epoch_start_time, val_loss,
-                    n100, r20, r50))
+              'n100 {:5.3f} | r20 {:5.3f} | r50 {:5.3f}'.format(
+            epoch, time.time() - epoch_start_time, val_loss,
+            n100, r20, r50))
         print('-' * 89)
 
         n_iter = epoch * len(range(0, N, args.batch_size))
@@ -232,5 +233,5 @@ with open(args.save, 'rb') as f:
 test_loss, n100, r20, r50 = evaluate(test_data_tr, test_data_te)
 print('=' * 89)
 print('| End of training | test loss {:4.2f} | n100 {:4.2f} | r20 {:4.2f} | '
-        'r50 {:4.2f}'.format(test_loss, n100, r20, r50))
+      'r50 {:4.2f}'.format(test_loss, n100, r20, r50))
 print('=' * 89)
