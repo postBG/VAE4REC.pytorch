@@ -42,8 +42,8 @@ class Trainer(object):
             epoch_start_time = time.time()
             n_iter = self.train_one_epoch(self.model, self.optimizer, self.criterion,
                                           self.datasets['train_data'], n_iter, epoch)
-            val_loss, n100, r20, r50 = self.evaluate(self.model, self.criterion, self.datasets['val_data_tr'],
-                                                     self.datasets['val_data_te'], n_iter)
+            val_loss, n100, n10, r20, r50 = self.evaluate(self.model, self.criterion, self.datasets['val_data_tr'],
+                                                          self.datasets['val_data_te'], n_iter)
             print_epoch_train_info(epoch, epoch_start_time, n100, r20, r50, val_loss)
 
             self.writer.add_scalars('data/loss', {'valid': val_loss}, n_iter)
@@ -53,6 +53,7 @@ class Trainer(object):
             wandb.log({
                 'val/loss': val_loss,
                 'val/n100': n100,
+                'val/n10': n10,
                 'val/r20': r20,
                 'val/r50': r50
             }, n_iter)
@@ -119,6 +120,7 @@ class Trainer(object):
         e_idxlist = list(range(data_tr_size))
         e_N = data_tr.shape[0]
         n100_list = []
+        n10_list = []
         r20_list = []
         r50_list = []
 
@@ -146,16 +148,19 @@ class Trainer(object):
                 recon_batch[data.nonzero()] = -np.inf
 
                 n100 = metric.NDCG_binary_at_k_batch(recon_batch, heldout_data, 100)
+                n10 = metric.NDCG_binary_at_k_batch(recon_batch, heldout_data, 10)
                 r20 = metric.Recall_at_k_batch(recon_batch, heldout_data, 20)
                 r50 = metric.Recall_at_k_batch(recon_batch, heldout_data, 50)
 
                 n100_list.append(n100)
+                n10_list.append(n10)
                 r20_list.append(r20)
                 r50_list.append(r50)
 
         total_loss /= len(range(0, e_N, self.batch_size))
         n100_list = np.concatenate(n100_list)
+        n10_list = np.concatenate(n10_list)
         r20_list = np.concatenate(r20_list)
         r50_list = np.concatenate(r50_list)
 
-        return total_loss, np.mean(n100_list), np.mean(r20_list), np.mean(r50_list)
+        return total_loss, np.mean(n100_list), np.mean(n10_list), np.mean(r20_list), np.mean(r50_list)
